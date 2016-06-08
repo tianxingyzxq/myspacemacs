@@ -31,6 +31,7 @@ values."
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
    '(
+     html
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
@@ -40,9 +41,18 @@ values."
      auto-completion
      better-defaults
      emacs-lisp
-     git
+     github
+     (git :variables
+          git-magit-status-fullscreen t
+          magit-push-always-verify nil
+          magit-save-repository-buffers 'dontask
+          magit-revert-buffers 'silent
+          magit-refs-show-commit-count 'all
+          magit-revision-show-gravatars nil)
      markdown
+     colors
      org
+     ;; (org :location built-in)
      (shell :variables
             shell-default-height 30
             shell-default-position 'bottom)
@@ -50,9 +60,13 @@ values."
      syntax-checking
      version-control
      ycmd
-     c-c++
+     (c-c++ :variables
+            c-c++-default-mode-for-headers 'c++-mode)
      python
      sml
+     (ibuffer :variables ibuffer-group-buffers-by 'projects)
+     (spacemacs-layouts :variables layouts-enable-autosave t
+                        layouts-autosave-delay 300)
      )
    ;; List of additional packages that will be installed without being
    ;; wrapped in a layer. If you need some configuration for these
@@ -119,18 +133,20 @@ values."
    ;; List of themes, the first of the list is loaded when spacemacs starts.
    ;; Press <SPC> T n to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
-   dotspacemacs-themes '(spacemacs-dark
+   dotspacemacs-themes '(
+                         solarized-dark
+                         monokai
+                         spacemacs-dark
                          spacemacs-light
                          solarized-light
-                         solarized-dark
                          leuven
-                         monokai
                          zenburn)
    ;; If non nil the cursor color matches the state color in GUI Emacs.
    dotspacemacs-colorize-cursor-according-to-state t
    ;; Default font. `powerline-scale' allows to quickly tweak the mode-line
    ;; size to make separators look not too crappy.
-   dotspacemacs-default-font '("Source Code Pro"
+   dotspacemacs-default-font '(;;"Microsoft YaHei"
+                               "Source Code Pro"
                                :size 17
                                :weight normal
                                :width normal
@@ -229,7 +245,7 @@ values."
    ;; If non nil show the color guide hint for transient state keys. (default t)
    dotspacemacs-show-transient-state-color-guide t
    ;; If non nil unicode symbols are displayed in the mode line. (default t)
-   dotspacemacs-mode-line-unicode-symbols t
+   dotspacemacs-mode-line-unicode-symbols nil
    ;; If non nil smooth scrolling (native-scrolling) is enabled. Smooth
    ;; scrolling overrides the default behavior of Emacs which recenters point
    ;; when it reaches the top or bottom of the screen. (default t)
@@ -275,8 +291,22 @@ executes.
  This function is mostly useful for variables that need to be set
 before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
-  (menu-bar-mode 1)
+  ;;(menu-bar-mode 1)
+  (setq configuration-layer--elpa-archives
+        '(("melpa-cn" . "https://elpa.zilongshanren.com/melpa/")
+          ("org-cn"   . "https://elpa.zilongshanren.com/org/")
+          ("gnu-cn"   . "https://elpa.zilongshanren.com/gnu/")))
   (ispell-change-dictionary "american" t)
+  ;;(setq solarized-use-variable-pitch nil)
+  (setq solarized-height-plus-1 1.0)
+  (setq solarized-height-plus-2 1.0)
+  (setq solarized-height-plus-3 1.0)
+  (setq solarized-height-plus-4 1.0)
+  (setq-default dotspacemacs-configuration-layers '(
+                                                    (colors :variables colors-enable-rainbow-identifiers t)))
+  ;;(setq solarized-high-contrast-mode-line t)
+  ;; (setq org-hide-leading-stars t)
+  ;; (setq org-ellipsis "⤵")
   )
 
 (defun dotspacemacs/user-config ()
@@ -286,7 +316,7 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
-  ;; set for evil 
+;; set for evil 
   (setcdr evil-insert-state-map nil)
   (define-key evil-insert-state-map [escape] 'evil-normal-state)
   (set-variable 'ycmd-server-command '("python" "/home/tx/ycmd/ycmd"))
@@ -303,21 +333,152 @@ you should place your code here."
                  )))
 
   (setq-default powerline-default-separator 'nil)
-  (with-eval-after-load 'c++-mode
-    (define-key c++-mode-map (kbd "s-.") 'company-ycmd))
   (setq-default dotspacemacs-configuration-layers
                 '((auto-completion :variables
                                    auto-completion-enable-snippets-in-popup t)))
   (setq company-backends-c-mode-common '((company-c-headers
+                                          company-ycmd
                                           company-dabbrev-code
-                                          company-keywords
-                                          company-gtags :with company-yasnippet
+                                          ;;company-keywords
+                                          ;;company-gtags :with company-yasnippet
                                           company-clang
                                           )
-                                         company-files company-dabbrev ))
+                                         company-files company-dabbrev )))
 
-  )
+   ;; (;; (spacemacs//set-monospaced-font "Monaco" "Microsoft YaHei" 17 20) ;;STFangsong 22
+  ;; Setting English Font
+  ;; Chinese Font
+  ;; (dolist (charset '(kana han symbol cjk-misc bopomofo))
+  ;;   (set-fontset-font (frame-parameter nil 'font)
+  ;;                     charset
+  ;;                     (font-spec :family "Microsoft Yahei" :size 16)))
+  ;; org set region.
+  (global-prettify-symbols-mode t)
+  (setq magit-push-always-verify nil) ;;set for magit
+  ;; set personal information
+  (setq user-full-name "tx"
+        user-mail-address "562479011@qq.com")
+  ;; org-mode
+  (global-set-key (kbd "C-M-\\") 'indent-region-or-buffer)
+  (global-set-key (kbd "<f5>") 'tx/run-current-file)
 
+  (with-eval-after-load 'org
+    (progn 
+      (org-babel-do-load-languages
+       'org-babel-load-languages
+       '((perl . t)
+         (ruby . t)
+         (sh . t)
+         (js . t)
+         (latex .t)
+         (python . t)
+         (emacs-lisp . t)
+         (plantuml . t)
+         (C . t)
+         (lisp . t)
+         (haskell . t)
+         (R . t)
+         (matlab . t)
+         (dot . t)
+         (ditaa . t))))
+    (require 'ox-publish)
+        (add-to-list 'org-latex-classes '("ctexart" "\\documentclass[11pt]{ctexart}
+                                        [NO-DEFAULT-PACKAGES]
+                                        \\usepackage[utf8]{inputenc}
+                                        \\usepackage[T1]{fontenc}
+                                        \\usepackage{fixltx2e}
+                                        \\usepackage{graphicx}
+                                        \\usepackage{longtable}
+                                        \\usepackage{float}
+                                        \\usepackage{wrapfig}
+                                        \\usepackage{rotating}
+                                        \\usepackage[normalem]{ulem}
+                                        \\usepackage{amsmath}
+                                        \\usepackage{textcomp}
+                                        \\usepackage{marvosym}
+                                        \\usepackage{wasysym}
+                                        \\usepackage{amssymb}
+                                        \\usepackage{booktabs}
+                                        \\usepackage[colorlinks,linkcolor=black,anchorcolor=black,citecolor=black]{hyperref}
+                                        \\tolerance=1000
+                                        \\usepackage{listings}
+                                        \\usepackage{xcolor}
+                                        \\lstset{
+                                        %行号
+                                        numbers=left,
+                                        %背景框
+                                        framexleftmargin=10mm,
+                                        frame=none,
+                                        %背景色
+                                        %backgroundcolor=\\color[rgb]{1,1,0.76},
+                                        backgroundcolor=\\color[RGB]{245,245,244},
+                                        %样式
+                                        keywordstyle=\\bf\\color{blue},
+                                        identifierstyle=\\bf,
+                                        numberstyle=\\color[RGB]{0,192,192},
+                                        commentstyle=\\it\\color[RGB]{0,96,96},
+                                        stringstyle=\\rmfamily\\slshape\\color[RGB]{128,0,0},
+                                        %显示空格
+                                        showstringspaces=false
+                                        }
+                                        "
+                                        ("\\section{%s}" . "\\section*{%s}")
+                                        ("\\subsection{%s}" . "\\subsection*{%s}")
+                                        ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                                        ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                                        ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+
+      ;; {{ export org-mode in Chinese into PDF
+      ;; @see http://freizl.github.io/posts/tech/2012-04-06-export-orgmode-file-in-Chinese.html
+      ;; and you need install texlive-xetex on different platforms
+      ;; To install texlive-xetex:
+      ;;    `sudo USE="cjk" emerge texlive-xetex` on Gentoo Linux
+      ;; }}
+      (setq org-latex-default-class "ctexart")
+      (setq org-latex-pdf-process
+            '(
+              "xelatex -interaction nonstopmode -output-directory %o %f"
+              "xelatex -interaction nonstopmode -output-directory %o %f"
+              "xelatex -interaction nonstopmode -output-directory %o %f"
+              "rm -fr %b.out %b.log %b.tex auto"))
+
+      (setq org-latex-listings t))
+
+  ;; functions
+  (defun indent-buffer()
+    (interactive)
+    (indent-region (point-min) (point-max)))
+  (defun indent-region-or-buffer()
+    (interactive)
+    (save-excursion
+      (if (region-active-p)
+          (progn
+            (indent-region (region-beginning) (region-end))
+            (message "Indent selected region."))
+        (progn
+          (indent-buffer)
+          (message "Indent buffer.")))))
+  (defun tx/run-current-file ()
+    (interactive)
+    (let* (
+           (ξsuffix-map
+            ;; (‹extension› . ‹shell program name›)
+            `(
+              ("php" . "php")
+              ("pl" . "perl")
+              ("py" . "python")
+              ("py3" . ,(if (string-equal system-type "windows-nt") "c:/Python32/python.exe" "python3"))
+              ("rb" . "ruby")
+              ("js" . "node") ; node.js
+              ("sh" . "bash")
+              ("vbs" . "cscript")
+              ("tex" . "pdflatex")
+              ("lua" . "lua")
+              ))
+           (ξfname (buffer-file-name))
+           (ξfSuffix (file-name-extension ξfname))
+           (ξprog-name (cdr (assoc ξfSuffix ξsuffix-map)))
+           (ξcmd-str (concat ξprog-name " \""   ξfname "\"")))))
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
 (custom-set-variables
@@ -327,7 +488,10 @@ you should place your code here."
  ;; If there is more than one, they won't work right.
  '(company-c-headers-path-system
    (quote
-    ("/usr/include/" "/usr/local/include/" "/usr/local/include/c++/v1/"))))
+    ("/usr/include/" "/usr/local/include/" "/usr/local/include/c++/v1/")))
+ '(company-idle-delay 0.08)
+ '(org-confirm-babel-evaluate nil)
+ )
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
