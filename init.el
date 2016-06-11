@@ -64,6 +64,7 @@ values."
             c-c++-default-mode-for-headers 'c++-mode)
      python
      sml
+     (chinese :variables chinese-enable-youdao-dict t)
      (ibuffer :variables ibuffer-group-buffers-by 'projects)
      (spacemacs-layouts :variables layouts-enable-autosave t
                         layouts-autosave-delay 300)
@@ -305,6 +306,8 @@ before packages are loaded. If you are unsure, you should try in setting them in
   (setq-default dotspacemacs-configuration-layers '(
                                                     (colors :variables colors-enable-rainbow-identifiers t)))
   ;;(setq solarized-high-contrast-mode-line t)
+  (setq-default dotspacemacs-configuration-layers '((chinese :variables
+                                                             chinese-enable-youdao-dict t)))
   ;; (setq org-hide-leading-stars t)
   ;; (setq org-ellipsis "⤵")
   )
@@ -343,7 +346,7 @@ you should place your code here."
                                           ;;company-gtags :with company-yasnippet
                                           company-clang
                                           )
-                                         company-files company-dabbrev )))
+                                         company-files company-dabbrev ))
 
    ;; (;; (spacemacs//set-monospaced-font "Monaco" "Microsoft YaHei" 17 20) ;;STFangsong 22
   ;; Setting English Font
@@ -354,6 +357,8 @@ you should place your code here."
   ;;                     (font-spec :family "Microsoft Yahei" :size 16)))
   ;; org set region.
   (global-prettify-symbols-mode t)
+  (setq-default fill-column 80)
+  (delete-selection-mode t)
   (setq magit-push-always-verify nil) ;;set for magit
   ;; set personal information
   (setq user-full-name "tx"
@@ -444,20 +449,24 @@ you should place your code here."
 
       (setq org-latex-listings t))
 
-  ;; functions
-  (defun indent-buffer()
-    (interactive)
-    (indent-region (point-min) (point-max)))
-  (defun indent-region-or-buffer()
-    (interactive)
-    (save-excursion
-      (if (region-active-p)
-          (progn
-            (indent-region (region-beginning) (region-end))
-            (message "Indent selected region."))
+;; functions
+(defun bb/define-key (keymap &rest bindings)
+  (declare (indent 1))
+  (while bindings
+    (define-key keymap (pop bindings) (pop bindings))))
+(defun indent-buffer()
+  (interactive)
+  (indent-region (point-min) (point-max)))
+(defun indent-region-or-buffer()
+  (interactive)
+  (save-excursion
+    (if (region-active-p)
         (progn
-          (indent-buffer)
-          (message "Indent buffer.")))))
+          (indent-region (region-beginning) (region-end))
+          (message "Indent selected region."))
+      (progn
+        (indent-buffer)
+        (message "Indent buffer.")))))
   (defun tx/run-current-file ()
     (interactive)
     (let* (
@@ -479,6 +488,14 @@ you should place your code here."
            (ξfSuffix (file-name-extension ξfname))
            (ξprog-name (cdr (assoc ξfSuffix ξsuffix-map)))
            (ξcmd-str (concat ξprog-name " \""   ξfname "\"")))))
+(bb/define-key company-active-map
+  (kbd "C-w") 'evil-delete-backward-word)
+
+(add-hook 'text-mode-hook 'auto-fill-mode)
+(add-hook 'org-mode-hook 'auto-fill-mode)
+(global-hungry-delete-mode t)
+;; (global-key-binding (kbd "s") 'evil-surround-change)
+)
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
 (custom-set-variables
