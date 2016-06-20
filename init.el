@@ -37,6 +37,7 @@ values."
      ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
+     ivy
      helm
      auto-completion
      better-defaults
@@ -232,7 +233,7 @@ values."
    ;; If non nil the frame is maximized when Emacs starts up.
    ;; Takes effect only if `dotspacemacs-fullscreen-at-startup' is nil.
    ;; (default nil) (Emacs 24.4+ only)
-   dotspacemacs-maximized-at-startup nil
+   dotspacemacs-maximized-at-startup t
    ;; A value from the range (0..100), in increasing opacity, which describes
    ;; the transparency level of a frame when it's active or selected.
    ;; Transparency can be toggled through `toggle-transparency'. (default 90)
@@ -308,6 +309,8 @@ before packages are loaded. If you are unsure, you should try in setting them in
   ;;(setq solarized-high-contrast-mode-line t)
   (setq-default dotspacemacs-configuration-layers '((chinese :variables
                                                              chinese-enable-youdao-dict t)))
+  (setq tramp-ssh-controlmaster-options
+        "-o ControlMaster=auto -o ControlPath='tramp.%%C' -o ControlPersist=no")
   ;; (setq org-hide-leading-stars t)
   ;; (setq org-ellipsis "⤵")
   )
@@ -359,6 +362,29 @@ you should place your code here."
   (global-prettify-symbols-mode t)
   (setq-default fill-column 80)
   (delete-selection-mode t)
+  ;;add auto format paste code
+  (dolist (command '(yank yank-pop))
+    (eval
+     `(defadvice ,command (after indent-region activate)
+        (and (not current-prefix-arg)
+             (member major-mode
+                     '(emacs-lisp-mode
+                       lisp-mode
+                       clojure-mode
+                       scheme-mode
+                       haskell-mode
+                       ruby-mode
+                       rspec-mode
+                       python-mode
+                       c-mode
+                       c++-mode
+                       objc-mode
+                       latex-mode
+                       js-mode
+                       plain-tex-mode))
+             (let ((mark-even-if-inactive transient-mark-mode))
+               (indent-region (region-beginning) (region-end) nil))))))
+
   (setq magit-push-always-verify nil) ;;set for magit
   ;; set personal information
   (setq user-full-name "tx"
@@ -366,6 +392,12 @@ you should place your code here."
   ;; org-mode
   (global-set-key (kbd "C-M-\\") 'indent-region-or-buffer)
   (global-set-key (kbd "<f5>") 'tx/run-current-file)
+  (spacemacs/set-leader-keys "oy" 'youdao-dictionary-search-at-point+)
+  ;;解决org表格里面中英文对齐的问题
+  ;; (when (configuration-layer/layer-usedp 'chinese)
+  ;;   (spacemacs//set-monospaced-font "Source Code Pro" "FangSong" 17 20))
+  (when (configuration-layer/layer-usedp 'chinese)
+    (spacemacs//set-monospaced-font "Source Code Pro" "STKaiti" 17 20))
 
   (with-eval-after-load 'org
     (progn 
@@ -467,29 +499,57 @@ you should place your code here."
       (progn
         (indent-buffer)
         (message "Indent buffer.")))))
-  (defun tx/run-current-file ()
-    (interactive)
-    (let* (
-           (ξsuffix-map
-            ;; (‹extension› . ‹shell program name›)
-            `(
-              ("php" . "php")
-              ("pl" . "perl")
-              ("py" . "python")
-              ("py3" . ,(if (string-equal system-type "windows-nt") "c:/Python32/python.exe" "python3"))
-              ("rb" . "ruby")
-              ("js" . "node") ; node.js
-              ("sh" . "bash")
-              ("vbs" . "cscript")
-              ("tex" . "pdflatex")
-              ("lua" . "lua")
-              ))
-           (ξfname (buffer-file-name))
-           (ξfSuffix (file-name-extension ξfname))
-           (ξprog-name (cdr (assoc ξfSuffix ξsuffix-map)))
-           (ξcmd-str (concat ξprog-name " \""   ξfname "\"")))))
+(defun tx/run-current-file ()
+  "Execute the current file.
+For example, if the current buffer is the file x.py, then it'll call 「python x.py」 in a shell.
+The file can be emacs lisp, php, perl, python, ruby, javascript, bash, ocaml, Visual Basic.
+File suffix is used to determine what program to run.
+If the file is modified, ask if you want to save first.
+URL `http://ergoemacs.org/emacs/elisp_run_current_file.html'
+version 2015-08-21"
+  (interactive)
+  (let* (
+         (ξsuffix-map
+          ;; (‹extension› . ‹shell program name›)
+          `(
+            ("php" . "php")
+            ("pl" . "perl")
+            ("py" . "python")
+            ("py3" . ,(if (string-equal system-type "windows-nt") "c:/Python32/python.exe" "python3"))
+            ("rb" . "ruby")
+            ("js" . "node") ; node.js
+            ("sh" . "bash")
+            ;; ("clj" . "java -cp /home/xah/apps/clojure-1.6.0/clojure-1.6.0.jar clojure.main")
+            ("ml" . "ocaml")
+            ("vbs" . "cscript")
+            ("tex" . "pdflatex")
+            ("lua" . "lua")
+            ;; ("pov" . "/usr/local/bin/povray +R2 +A0.1 +J1.2 +Am2 +Q9 +H480 +W640")
+            ))
+         (ξfname (buffer-file-name))
+         (ξfSuffix (file-name-extension ξfname))
+         (ξprog-name (cdr (assoc ξfSuffix ξsuffix-map)))
+         (ξcmd-str (concat ξprog-name " \""   ξfname "\"")))
+
+    (when (buffer-modified-p)
+      (when (y-or-n-p "Buffer modified. Do you want to save first?")
+        (save-buffer)))
+
+    (if (string-equal ξfSuffix "el") ; special case for emacs lisp
+        (load ξfname)
+      (if ξprog-name
+          (progn
+            (message "Running…")
+            (async-shell-command ξcmd-str "*zilongshanren/run-current-file output*"))
+        (message "No recognized program file suffix for this file.")))))
 (bb/define-key company-active-map
   (kbd "C-w") 'evil-delete-backward-word)
+
+(setq dired-recursive-copies 'always)
+(setq dired-recursive-deletes 'always)
+(setq evil-move-cursor-back nil)
+(spacemacs/toggle-automatic-symbol-highlight-on)
+(setq evil-shift-round nil)
 
 (add-hook 'text-mode-hook 'auto-fill-mode)
 (add-hook 'org-mode-hook 'auto-fill-mode)
@@ -514,4 +574,14 @@ you should place your code here."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(company-tooltip-common ((t (:inherit company-tooltip :weight bold :underline nil))))
+ '(company-tooltip-common-selection ((t (:inherit company-tooltip-selection :weight bold :underline nil))))
+ '(org-level-1 ((t (:foreground "#BE031C" :weight normal :height 1.0))))
+ '(org-level-2 ((t (:foreground "#D33A10" :weight normal :height 1.0))))
+ '(org-level-3 ((t (:foreground "#FA880E" :weight normal :height 1.0))))
+ '(org-level-4 ((t (:foreground "#FFB208" :weight normal :height 1.0))))
+ '(org-level-5 ((t (:foreground "#FDEC23" :weight normal :height 1.0))))
+ '(org-level-6 ((t (:foreground "#FBFE32" :weight normal :height 1.0))))
+ '(org-level-7 ((t (:foreground "#5CCE42" :weight normal :height 1.0))))
+ '(org-level-8 ((t (:foreground "#079962" :weight normal :height 1.0))))
  )
