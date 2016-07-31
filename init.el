@@ -411,7 +411,7 @@ you should place your code here."
   (setcdr evil-insert-state-map nil)
   (define-key evil-insert-state-map [escape] 'evil-normal-state)
   (set-variable 'ycmd-server-command '("python" "/home/tx/ycmd/ycmd/"))
-  (set-variable 'ycmd-global-config "/home/tx/ycmd/examples/.ycm_extra_conf.py")
+  (set-variable 'ycmd-global-config "/home/tx/ycmd/examples/.ycm_extra_conf.py") ;; very important
   (setq-default dotspacemacs-configuration-layers
                 '((c-c++ :variables c-c++-enable-clang-support t)))
 
