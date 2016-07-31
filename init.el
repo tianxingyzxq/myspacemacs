@@ -39,8 +39,10 @@ values."
      ;; ----------------------------------------------------------------
      ivy
      helm
-     auto-completion
-     better-defaults
+     (auto-completion :variables auto-completion-enable-sort-by-usage t
+                      ;;auto-completion-enable-help-tooltip t
+                      :disabled-for org markdown)
+     (better-defaults :variables better-defaults-move-to-end-of-code-first t) 
      emacs-lisp
      github
      (git :variables
@@ -51,14 +53,17 @@ values."
           magit-refs-show-commit-count 'all
           magit-revision-show-gravatars nil)
      markdown
+     haskell
+     javascript
+     (vinegar :variables vinegar-reuse-dired-buffer t)
      colors
      org
      ;; (org :location built-in)
      (shell :variables
             shell-default-height 30
             shell-default-position 'bottom)
-     spell-checking
-     syntax-checking
+     (syntax-checking :variables syntax-checking-enable-by-default nil)
+     (spell-checking :variables spell-checking-enable-by-default nil)
      version-control
      ycmd
      (c-c++ :variables
@@ -66,7 +71,7 @@ values."
      python
      sml
      (chinese :variables chinese-enable-youdao-dict t)
-     (ibuffer :variables ibuffer-group-buffers-by 'projects)
+     (ibuffer :variabl)(es ibuffer-group-buffers-by 'projects)
      (spacemacs-layouts :variables layouts-enable-autosave t
                         layouts-autosave-delay 300)
      )
@@ -76,7 +81,83 @@ values."
    ;; configuration in `dotspacemacs/user-config'.
    dotspacemacs-additional-packages '()
    ;; A list of packages that will not be install and loaded.
-   dotspacemacs-excluded-packages '()
+   dotspacemacs-excluded-packages '(
+                                    counsel-projectile
+                                    magit-gh-pulls
+                                    magit-gitflow
+                                    org-projectile
+                                    evil-mc
+                                    evil-args
+                                    evil-ediff
+                                    evil-exchange
+                                    evil-unimpaired
+                                    evil-indent-plus
+                                    centered-buffer-mode
+                                    volatile-highlights
+                                    spaceline
+                                    holy-mode
+                                    skewer-mode
+                                    highlight-indentation
+                                    vi-tilde-fringe
+                                    open-junk-file
+                                    coffee-mode
+                                    evil-tutor
+                                    eyebrowse
+                                    hl-anything
+                                    org-bullets
+                                    smooth-scrolling
+                                    org-repo-todo
+                                    srefactor
+                                    org-download
+                                    org-timer
+                                    livid-mode
+                                    ;; org-plus-contrib
+                                    org-tree-slide
+                                    git-gutter
+                                    git-gutter-fringe
+                                    alert
+                                    ;; disable it for lispy-mode
+                                    ;;https://github.com/abo-abo/lispy/issues/137
+                                    evil-escape
+                                    ;;At first, I should disable hydra in zilongshanren layer and install clj-refactor, after it is installed.
+                                    ;; I could re-enable it again in zilongshanren layer.
+                                    ;; clj-refactor
+                                    ;;remove from spacemacs distribution
+                                    ;; neotree
+                                    leuven-theme
+                                    gh-md
+                                    evil-lisp-state
+                                    spray
+                                    doc-view
+                                    lorem-ipsum
+                                    ac-ispell
+                                    ace-jump-mode
+                                    auto-complete
+                                    auto-dictionary
+                                    clang-format
+                                    define-word
+                                    google-translate
+                                    disaster
+                                    epic
+                                    fancy-battery
+                                    neotree
+                                    org-present
+                                    orgit
+                                    orglue
+                                    spacemacs-theme
+                                    spinner
+                                    tagedit
+                                    helm-flyspell
+                                    flyspell-correct-helm
+                                    helm-c-yasnippet
+                                    ace-jump-helm-line
+                                    helm-make
+                                    helm-projectile
+                                    helm-themes
+                                    helm-swoop
+                                    helm-mode-manager
+                                    helm-spacemacs-help
+                                    )
    ;; Defines the behaviour of Spacemacs when downloading packages.
    ;; Possible values are `used', `used-but-keep-unused' and `all'. `used' will
    ;; download only explicitly used packages and remove any unused packages as
@@ -84,7 +165,9 @@ values."
    ;; used packages but won't delete them if they become unused. `all' will
    ;; download all the packages regardless if they are used or not and packages
    ;; won't be deleted by Spacemacs. (default is `used')
-   dotspacemacs-download-packages 'used))
+   dotspacemacs-download-packages 'used
+   dotspacemacs-delete-orphan-packages t
+   ))
 
 (defun dotspacemacs/init ()
   "Initialization function.
@@ -126,7 +209,7 @@ values."
    ;; List of items to show in the startup buffer. If nil it is disabled.
    ;; Possible values are: `recents' `bookmarks' `projects' `agenda' `todos'.
    ;; (default '(recents projects))
-   dotspacemacs-startup-lists '(recents projects)
+   dotspacemacs-startup-lists '(recents projects bookmarks)
    ;; Number of recent files to show in the startup buffer. Ignored if
    ;; `dotspacemacs-startup-lists' doesn't include `recents'. (default 5)
    dotspacemacs-startup-recent-list-size 5
@@ -175,7 +258,7 @@ values."
    ;; works in the GUI. (default nil)
    dotspacemacs-distinguish-gui-tab nil
    ;; If non nil `Y' is remapped to `y$' in Evil states. (default nil)
-   dotspacemacs-remap-Y-to-y$ nil
+   dotspacemacs-remap-Y-to-y$ t
    ;; If non-nil, the shift mappings `<' and `>' retain visual state if used
    ;; there. (default t)
    dotspacemacs-retain-visual-state-on-shift t
@@ -293,7 +376,7 @@ executes.
  This function is mostly useful for variables that need to be set
 before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
-  ;;(menu-bar-mode 1)
+  (menu-bar-mode 1)
   (setq configuration-layer--elpa-archives
         '(("melpa-cn" . "https://elpa.zilongshanren.com/melpa/")
           ("org-cn"   . "https://elpa.zilongshanren.com/org/")
@@ -311,6 +394,8 @@ before packages are loaded. If you are unsure, you should try in setting them in
                                                              chinese-enable-youdao-dict t)))
   (setq tramp-ssh-controlmaster-options
         "-o ControlMaster=auto -o ControlPath='tramp.%%C' -o ControlPersist=no")
+  (add-to-list 'exec-path "/usr/bin")
+  (add-to-list 'exec-path "/home/tx/.cabal/bin")
   ;; (setq org-hide-leading-stars t)
   ;; (setq org-ellipsis "⤵")
   )
@@ -325,7 +410,8 @@ you should place your code here."
 ;; set for evil 
   (setcdr evil-insert-state-map nil)
   (define-key evil-insert-state-map [escape] 'evil-normal-state)
-  (set-variable 'ycmd-server-command '("python" "/home/tx/ycmd/ycmd"))
+  (set-variable 'ycmd-server-command '("python" "/home/tx/ycmd/ycmd/"))
+  (set-variable 'ycmd-global-config "/home/tx/ycmd/examples/.ycm_extra_conf.py")
   (setq-default dotspacemacs-configuration-layers
                 '((c-c++ :variables c-c++-enable-clang-support t)))
 
@@ -338,7 +424,8 @@ you should place your code here."
                  "/usr/include/"
                  )))
 
-  (setq-default powerline-default-separator 'nil)
+  ;;(setq ns-use-srgb-colorspace nil)
+  (setq-default powerline-default-separator 'arrow)
   (setq-default dotspacemacs-configuration-layers
                 '((auto-completion :variables
                                    auto-completion-enable-snippets-in-popup t)))
@@ -350,15 +437,13 @@ you should place your code here."
                                           company-clang
                                           )
                                          company-files company-dabbrev ))
-
-   ;; (;; (spacemacs//set-monospaced-font "Monaco" "Microsoft YaHei" 17 20) ;;STFangsong 22
-  ;; Setting English Font
-  ;; Chinese Font
-  ;; (dolist (charset '(kana han symbol cjk-misc bopomofo))
-  ;;   (set-fontset-font (frame-parameter nil 'font)
-  ;;                     charset
-  ;;                     (font-spec :family "Microsoft Yahei" :size 16)))
+  ;; (setq company-backends-web-mode '((company-dabbrev-code
+  ;;                                    company-keywords
+  ;;                                    company-etags)
+  ;;                                   company-files company-dabbrev))
   ;; org set region.
+  (setq-default dotspacemacs-configuration-layers
+                '((haskell :variables haskell-completion-backend 'intero)))
   (global-prettify-symbols-mode t)
   (setq-default fill-column 80)
   (delete-selection-mode t)
@@ -386,6 +471,8 @@ you should place your code here."
                (indent-region (region-beginning) (region-end) nil))))))
 
   (setq magit-push-always-verify nil) ;;set for magit
+  ;; (setq-default url-show-status nil)
+  ;; (setq-default request-message-level -1)
   ;; set personal information
   (setq user-full-name "tx"
         user-mail-address "562479011@qq.com")
@@ -479,7 +566,7 @@ you should place your code here."
               "xelatex -interaction nonstopmode -output-directory %o %f"
               "rm -fr %b.out %b.log %b.tex auto"))
 
-      (setq org-latex-listings t))
+      (setq org-latex-listings t)) 
 
 ;; functions
 (defun bb/define-key (keymap &rest bindings)
@@ -524,6 +611,8 @@ version 2015-08-21"
             ("vbs" . "cscript")
             ("tex" . "pdflatex")
             ("lua" . "lua")
+            ("cpp" . "make && ./a.out")
+            
             ;; ("pov" . "/usr/local/bin/povray +R2 +A0.1 +J1.2 +Am2 +Q9 +H480 +W640")
             ))
          (ξfname (buffer-file-name))
@@ -542,8 +631,8 @@ version 2015-08-21"
             (message "Running…")
             (async-shell-command ξcmd-str "*zilongshanren/run-current-file output*"))
         (message "No recognized program file suffix for this file.")))))
-(bb/define-key company-active-map
-  (kbd "C-w") 'evil-delete-backward-word)
+;; (bb/define-key company-active-map
+;;   (kbd "C-w") 'evil-delete-backward-word)
 
 (setq dired-recursive-copies 'always)
 (setq dired-recursive-deletes 'always)
@@ -554,6 +643,9 @@ version 2015-08-21"
 (add-hook 'text-mode-hook 'auto-fill-mode)
 (add-hook 'org-mode-hook 'auto-fill-mode)
 (global-hungry-delete-mode t)
+(setq tab-width 2)
+(set-variable 'python-indent-offset 2)
+(set-variable 'python-indent-guess-indent-offset nil)
 ;; (global-key-binding (kbd "s") 'evil-surround-change)
 )
 ;; Do not write anything past this comment. This is where Emacs will
@@ -567,8 +659,9 @@ version 2015-08-21"
    (quote
     ("/usr/include/" "/usr/local/include/" "/usr/local/include/c++/v1/")))
  '(company-idle-delay 0.08)
- '(org-confirm-babel-evaluate nil)
- )
+ '(company-ycmd-request-sync-timeout 0.5)
+ '(exec-path-from-shell-arguments (quote ("-l")))
+ '(org-confirm-babel-evaluate nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -583,5 +676,4 @@ version 2015-08-21"
  '(org-level-5 ((t (:foreground "#FDEC23" :weight normal :height 1.0))))
  '(org-level-6 ((t (:foreground "#FBFE32" :weight normal :height 1.0))))
  '(org-level-7 ((t (:foreground "#5CCE42" :weight normal :height 1.0))))
- '(org-level-8 ((t (:foreground "#079962" :weight normal :height 1.0))))
- )
+ '(org-level-8 ((t (:foreground "#079962" :weight normal :height 1.0)))))
