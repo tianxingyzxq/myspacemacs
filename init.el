@@ -40,7 +40,7 @@ values."
      ivy
      helm
      (auto-completion :variables auto-completion-enable-sort-by-usage t
-                      ;;auto-completion-enable-help-tooltip t
+                      auto-completion-enable-help-tooltip t
                       :disabled-for org markdown)
      (better-defaults :variables better-defaults-move-to-end-of-code-first t) 
      emacs-lisp
@@ -383,6 +383,8 @@ before packages are loaded. If you are unsure, you should try in setting them in
           ("gnu-cn"   . "https://elpa.zilongshanren.com/gnu/")))
   (ispell-change-dictionary "american" t)
   ;;(setq solarized-use-variable-pitch nil)
+  (add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
+  (add-to-list 'exec-path "/home/tx/.local/bin/")
   (setq solarized-height-plus-1 1.0)
   (setq solarized-height-plus-2 1.0)
   (setq solarized-height-plus-3 1.0)
@@ -394,8 +396,6 @@ before packages are loaded. If you are unsure, you should try in setting them in
                                                              chinese-enable-youdao-dict t)))
   (setq tramp-ssh-controlmaster-options
         "-o ControlMaster=auto -o ControlPath='tramp.%%C' -o ControlPersist=no")
-  (add-to-list 'exec-path "/usr/bin")
-  (add-to-list 'exec-path "/home/tx/.cabal/bin")
   ;; (setq org-hide-leading-stars t)
   ;; (setq org-ellipsis "⤵")
   )
@@ -414,15 +414,20 @@ you should place your code here."
   (set-variable 'ycmd-global-config "/home/tx/ycmd/examples/.ycm_extra_conf.py") ;; very important
   (setq-default dotspacemacs-configuration-layers
                 '((c-c++ :variables c-c++-enable-clang-support t)))
+  ;; (setq-default dotspacemacs-configuration-layers
+  ;;               '((haskell :variables haskell-process-type 'auto)))
+  ;; (setq ycmd-extra-conf-whitelist '("~/Algorithm/*"))
+  ;; (setq ycmd-force-semantic-completion t)
 
-  (setq company-clang-arguments
-        (mapcar (lambda (item)
-                  (concat "-I" item))
-                (split-string
-                 "/usr/include/c++/v1/"
-                 "/usr/local/include/"
-                 "/usr/include/"
-                 )))
+
+  ;; (setq company-clang-arguments
+  ;;       (mapcar (lambda (item)
+  ;;                 (concat "-I" item))
+  ;;               (split-string
+  ;;                "/usr/include/c++/v1/"
+  ;;                "/usr/local/include/"
+  ;;                "/usr/include/"
+  ;;                )))
 
   ;;(setq ns-use-srgb-colorspace nil)
   (setq-default powerline-default-separator 'arrow)
@@ -436,7 +441,7 @@ you should place your code here."
                                           ;;company-gtags :with company-yasnippet
                                           company-clang
                                           )
-                                         company-files company-dabbrev ))
+                                         ))
   ;; (setq company-backends-web-mode '((company-dabbrev-code
   ;;                                    company-keywords
   ;;                                    company-etags)
@@ -444,6 +449,13 @@ you should place your code here."
   ;; org set region.
   (setq-default dotspacemacs-configuration-layers
                 '((haskell :variables haskell-completion-backend 'intero)))
+  ;; (setq-default dotspacemacs-configuration-layers
+  ;;               '(auto-completion
+  ;;                 (haskell :variables haskell-completion-backend 'intero)))
+  ;; (setq-default dotspacemacs-configuration-layers
+  ;;               '((haskell :variables haskell-enable-shm-support t)))
+  (setq-default dotspacemacs-configuration-layers
+                '((haskell :variables haskell-enable-hindent-style "johan-tibell")))
   (global-prettify-symbols-mode t)
   (setq-default fill-column 80)
   (delete-selection-mode t)
@@ -611,7 +623,7 @@ version 2015-08-21"
             ("vbs" . "cscript")
             ("tex" . "pdflatex")
             ("lua" . "lua")
-            ("cpp" . "make && ./a.out")
+            ("cpp" . "make clean && cmake .&& make && ./hello")
             
             ;; ("pov" . "/usr/local/bin/povray +R2 +A0.1 +J1.2 +Am2 +Q9 +H480 +W640")
             ))
@@ -643,8 +655,8 @@ version 2015-08-21"
 (add-hook 'text-mode-hook 'auto-fill-mode)
 (add-hook 'org-mode-hook 'auto-fill-mode)
 (global-hungry-delete-mode t)
-(setq tab-width 2)
-(set-variable 'python-indent-offset 2)
+;; (setq tab-width 2)
+;; (set-variable 'python-indent-offset 2)
 (set-variable 'python-indent-guess-indent-offset nil)
 ;; (global-key-binding (kbd "s") 'evil-surround-change)
 )
@@ -677,3 +689,37 @@ version 2015-08-21"
  '(org-level-6 ((t (:foreground "#FBFE32" :weight normal :height 1.0))))
  '(org-level-7 ((t (:foreground "#5CCE42" :weight normal :height 1.0))))
  '(org-level-8 ((t (:foreground "#079962" :weight normal :height 1.0)))))
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(company-c-headers-path-system
+   (quote
+    ("/usr/include/" "/usr/local/include/" "/usr/local/include/c++/v1/")))
+ '(company-idle-delay 0.08)
+ '(company-ycmd-request-sync-timeout 0.5)
+ '(evil-want-Y-yank-to-eol t)
+ '(exec-path-from-shell-arguments (quote ("-l")))
+ '(org-confirm-babel-evaluate nil))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(company-tooltip-common ((t (:inherit company-tooltip :weight bold :underline nil))))
+ '(company-tooltip-common-selection ((t (:inherit company-tooltip-selection :weight bold :underline nil))))
+ '(org-level-1 ((t (:foreground "#BE031C" :weight normal :height 1.0))))
+ '(org-level-2 ((t (:foreground "#D33A10" :weight normal :height 1.0))))
+ '(org-level-3 ((t (:foreground "#FA880E" :weight normal :height 1.0))))
+ '(org-level-4 ((t (:foreground "#FFB208" :weight normal :height 1.0))))
+ '(org-level-5 ((t (:foreground "#FDEC23" :weight normal :height 1.0))))
+ '(org-level-6 ((t (:foreground "#FBFE32" :weight normal :height 1.0))))
+ '(org-level-7 ((t (:foreground "#5CCE42" :weight normal :height 1.0))))
+ '(org-level-8 ((t (:foreground "#079962" :weight normal :height 1.0)))))
+)
